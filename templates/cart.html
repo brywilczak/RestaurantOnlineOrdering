@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Services - Restaurant Online Ordering System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .service {
+            margin-bottom: 20px;
+        }
+        .service-checkbox {
+            margin-top: 10px;
+        }
+        #selected-services {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Our Services</h1>
+</header>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/about">About Us</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/faq">FAQ</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/contact">Contact Us</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<main class="container">
+    <section class="services">
+        <h2>Client Information</h2>
+        <form id="service-form" action="/checkout" method="POST">
+            <!-- Client information fields -->
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="timing">Preferred Timing and Schedule:</label>
+                <input type="datetime-local" class="form-control" id="timing" name="timing" required>
+            </div>
+            <div class="form-group">
+                <label for="authorization">Authorization Details:</label>
+                <input type="text" class="form-control" id="authorization" name="authorization">
+            </div>
+            <div class="form-group">
+                <label for="comments">Comments:</label>
+                <textarea class="form-control" id="comments" name="comments" rows="4" cols="50"></textarea>
+            </div>
+            
+            <h2>Services</h2>
+            <div class="service">
+                <img src="{{ url_for('static', filename='multi-factor-authentication.jpg') }}" alt="Multi-Factor Authentication">
+                <h3>Multi-Factor Authentication</h3>
+                <p>Enhanced security with multi-factor authentication (MFA) to protect against unauthorized access.</p>
+                <p>Price: $50.00</p>
+                <input type="checkbox" id="mfa" class="service-checkbox" name="service" value="Multi-Factor Authentication">
+                <label for="mfa">Add to Cart</label>
+            </div>
+            <!-- Add more service items here -->
+            <div class="service">
+                <img src="{{ url_for('static', filename='data-encryption.jpg') }}" alt="Data Encryption">
+                <h3>Data Encryption</h3>
+                <p>Secure your sensitive data with advanced encryption techniques to prevent unauthorized access.</p>
+                <p>Price: $75.00</p>
+                <input type="checkbox" id="data-encryption" class="service-checkbox" name="service" value="Data Encryption">
+                <label for="data-encryption">Add to Cart</label>
+            </div>
+            <div class="service">
+                <img src="{{ url_for('static', filename='security-audits.jpg') }}" alt="Security Audits">
+                <h3>Security Audits</h3>
+                <p>Comprehensive security audits to identify and address vulnerabilities in your system.</p>
+                <p>Price: $100.00</p>
+                <input type="checkbox" id="security-audits" class="service-checkbox" name="service" value="Security Audits">
+                <label for="security-audits">Add to Cart</label>
+            </div>
+            <div class="service">
+                <img src="{{ url_for('static', filename='penetration-testing.jpg') }}" alt="Penetration Testing">
+                <h3>Penetration Testing</h3>
+                <p>Thorough penetration testing to simulate real-world attacks and strengthen your defenses.</p>
+                <p>Price: $150.00</p>
+                <input type="checkbox" id="penetration-testing" class="service-checkbox" name="service" value="Penetration Testing">
+                <label for="penetration-testing">Add to Cart</label>
+            </div>
+            <div class="service">
+                <img src="{{ url_for('static', filename='secure-payment-gateways.jpg') }}" alt="Secure Payment Gateways">
+                <h3>Secure Payment Gateways</h3>
+                <p>Integrate secure payment gateways to protect financial transactions and prevent fraud.</p>
+                <p>Price: $200.00</p>
+                <input type="checkbox" id="secure-payment-gateways" class="service-checkbox" name="service" value="Secure Payment Gateways">
+                <label for="secure-payment-gateways">Add to Cart</label>
+            </div>
+
+            <!-- Selected services and total -->
+            <div id="selected-services" class="mt-4"></div>
+            <div id="total-price" class="mt-2">$0.00</div>
+
+            <!-- PayPal button -->
+            <div id="paypal-button-container" class="mt-4"></div>
+        </form>
+    </section>
+</main>
+<footer class="footer">
+    <p>&copy; 2024 Restaurant Online Ordering System. All rights reserved.</p>
+</footer>
+
+<!-- PayPal SDK script -->
+<script src="https://www.paypal.com/sdk/js?client-id=Ab7ob8GCluhVGWWWpESFUEuMjFIUxM8ew8zaT1XZLUcmCB1VMedZguFoZ3Ga2RQyRG5kDUeLJMq5fMN7"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectedServices = document.getElementById('selected-services');
+        const totalAmount = document.getElementById('total-price');
+
+        const checkboxes = document.querySelectorAll('.service-checkbox');
+
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const service = this.value;
+                const priceText = this.parentNode.querySelector('p:nth-of-type(2)').innerText; // Updated selector to get the price text
+                const match = priceText.match(/\$\d+(\.\d{1,2})?/); // Extracting and parsing the price
+                const price = match ? parseFloat(match[0].slice(1)) : 0; // If match is null, set price to 0
+                if (this.checked) {
+                    const serviceItem = document.createElement('div');
+                    serviceItem.textContent = service + ': $' + price.toFixed(2);
+                    selectedServices.appendChild(serviceItem);
+                    // Update total price
+                    updateTotal(price);
+                } else {
+                    const serviceItems = selectedServices.querySelectorAll('div');
+                    serviceItems.forEach(function(item) {
+                        if (item.textContent.includes(service)) {
+                            selectedServices.removeChild(item);
+                            // Update total price
+                            updateTotal(-price);
+                        }
+                    });
+                }
+            });
+        });
+
+        function updateTotal(price) {
+            let currentTotal = parseFloat(totalAmount.textContent.substring(9)); // Extracting the numerical part of the total text
+            // Check if currentTotal is NaN, if so, set it to 0
+            if (isNaN(currentTotal)) {
+                currentTotal = 0;
+            }
+            const newTotal = currentTotal + price;
+            totalAmount.textContent = "Total = $" + newTotal.toFixed(2); // Change the total text
+        }
+    });
+
+    // PayPal integration script
+    paypal.Buttons({
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: (parseFloat(document.getElementById('total-price').textContent.substring(9))).toFixed(2) // Extracting the numerical part of the total text
+                    }
+                }]
+            });
+        },
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                alert('Payment successful! Transaction completed by ' + details.payer.name.given_name);
+                // Reset form
+                document.getElementById("service-form").reset();
+                // Reset total price
+                document.getElementById('total-price').textContent = "Total = $0.00"; // Reset total text
+                // Clear selected services
+                document.getElementById('selected-services').innerHTML = "";
+            });
+        }
+    }).render('#paypal-button-container');
+</script>
+
+
+</body>
+</html>
